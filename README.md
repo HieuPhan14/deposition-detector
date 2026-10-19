@@ -5,13 +5,22 @@ Compares two depositions from the same witness and classifies each inconsistency
 ## Run it
 
 ```bash
-git clone <this repo> && cd deposition-detector
-ANTHROPIC_API_KEY=sk-ant-... docker compose up --build
+git clone https://github.com/HieuPhan14/deposition-detector.git
+cd deposition-detector
+docker compose up --build
 ```
 
 Then open http://localhost:3001.
 
-Without Docker (Node 20+), run `npm install && npm start`, with the key in `.env` (see `.env.example`).
+To use Claude, first create a file named `.env` in the project folder containing your key (see `.env.example`):
+
+```
+ANTHROPIC_API_KEY=your-key-here
+```
+
+On macOS/Linux you can instead pass the key inline: `ANTHROPIC_API_KEY=your-key-here docker compose up --build`.
+
+Without Docker (Node 20+): `npm install && npm start`. This reads the same `.env` file.
 
 With no key, the app starts in **demo mode**. It runs the full verification, classification and scoring pipeline on the sample transcripts, using fixture LLM output.
 
