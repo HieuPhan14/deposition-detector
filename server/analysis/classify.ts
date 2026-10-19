@@ -40,7 +40,7 @@ export function classify(relation: Candidate["relation"], dimension: string, s: 
 
   // 3. The model judged it reconcilable and we have no measurement saying otherwise.
   if (relation === "imprecision_or_compatible") {
-    return { type: "FALSE_POSITIVE", reason: "Reconcilable as added detail or loose phrasing. No negation or measurable conflict found." };
+    return { type: "FALSE_POSITIVE", reason: "The model judged these reconcilable (added detail or loose phrasing), and no measured signal contradicts that." };
   }
 
   // 4. Direct contradictions must show it on the surface of the text.
