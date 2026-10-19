@@ -50,13 +50,17 @@ describe("groundQuote", () => {
     expect(g).toMatchObject({ turnId: "A1", grounding: 1, start: 0 });
   });
   it("re-anchors a verbatim quote cited to the wrong turn, with a small penalty", () => {
-    expect(groundQuote("I sold it in January", "A2", A)).toMatchObject({ turnId: "A5", grounding: 0.95 });
+    const g = groundQuote("I sold it in January", "A2", A);
+    expect(g).toMatchObject({ turnId: "A5", grounding: 0.9 });
+    expect(groundingGate(1, g.grounding)).toBeLessThan(1);
   });
   it("gives fabricated testimony near-zero grounding", () => {
     expect(groundQuote("I still drive the Civic every day", "A5", A).grounding).toBeLessThan(0.5);
   });
   it("does not accept the attorney's question as testimony", () => {
-    expect(groundQuote("Do you own a grey Honda Civic?", "A5", A).grounding).toBe(0.3);
+    const g = groundQuote("Do you own a grey Honda Civic?", "A5", A);
+    expect(g.grounding).toBe(0.3);
+    expect(groundingGate(1, g.grounding)).toBe(0); // dropped, not just discounted
   });
 });
 

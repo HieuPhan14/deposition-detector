@@ -12,8 +12,8 @@ export type Extractor = (a: Transcript, b: Transcript) => Promise<Candidate[][]>
 
 /** Quotes from the attorney's question are not testimony. */
 const QUESTION_ONLY_GROUNDING = 0.3;
-/** Verbatim, but the model cited the wrong turn. */
-const MISCITED_GROUNDING = 0.95;
+/** Verbatim, but the model cited the wrong turn: below the gate's full-trust bar, so it costs ~10%. */
+const MISCITED_GROUNDING = 0.9;
 
 /**
  * Verify a quote against the transcript ourselves. If the model cited the
