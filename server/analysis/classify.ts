@@ -14,6 +14,19 @@ const describeRange = (r: [number, number]) =>
   r[0] === r[1] ? formatMinutes(r[0]) : `${formatMinutes(r[0])}–${formatMinutes(r[1])}`;
 
 /**
+ * Surface markers that justify DIRECT: a polarity flip or absolute language
+ * in either quote. Returns the explanation clauses, or null if there are none.
+ */
+function surfaceMarkers(s: Signals): string[] | null {
+  const abs = [...s.absolutesA, ...s.absolutesB];
+  if (!s.polarityFlip && abs.length === 0) return null;
+  return [
+    s.polarityFlip ? "one statement is negated and the other is not" : null,
+    abs.length ? `absolute language (${[...new Set(abs)].map((x) => `"${x}"`).join(", ")}) leaves no room for an exception` : null,
+  ].filter((x): x is string => x !== null);
+}
+
+/**
  * Decide the type from the model's proposed relation plus OUR measured
  * signals. Rules run in priority order; measured evidence beats the
  * model's opinion, and each rule records why it fired.
@@ -34,6 +47,12 @@ export function classify(relation: Candidate["relation"], dimension: string, s: 
     if (relation === "imprecision_or_compatible" && t.gapMinutes! <= t.toleranceMinutes * TIME_OVERRIDE_FACTOR) {
       return { type: "FALSE_POSITIVE", reason: `${timeDesc}. Slightly outside tolerance, but the model judged it reconcilable and the gap is under ${TIME_OVERRIDE_FACTOR}× tolerance.` };
     }
+    // A time conflict that is also stated as an explicit denial is DIRECT.
+    // Only reachable when the model itself proposed explicit_negation.
+    if (relation === "explicit_negation") {
+      const why = surfaceMarkers(s);
+      if (why) return { type: "DIRECT", reason: `${timeDesc}. Explicit conflict: ${why.join("; ")}.` };
+    }
     const override = relation === "imprecision_or_compatible" ? " The model called this imprecision; the measured gap overrides it." : "";
     return { type: "INFERENTIAL", reason: `${timeDesc}. Neither answer denies the other, but both cannot be true.${override}` };
   }
@@ -45,14 +64,8 @@ export function classify(relation: Candidate["relation"], dimension: string, s: 
 
   // 4. Direct contradictions must show it on the surface of the text.
   if (relation === "explicit_negation") {
-    const abs = [...s.absolutesA, ...s.absolutesB];
-    if (s.polarityFlip || abs.length > 0) {
-      const why = [
-        s.polarityFlip ? "one statement is negated and the other is not" : null,
-        abs.length ? `absolute language (${[...new Set(abs)].map((x) => `"${x}"`).join(", ")}) leaves no room for an exception` : null,
-      ].filter(Boolean);
-      return { type: "DIRECT", reason: `Explicit conflict: ${why.join("; ")}.` };
-    }
+    const why = surfaceMarkers(s);
+    if (why) return { type: "DIRECT", reason: `Explicit conflict: ${why.join("; ")}.` };
     return {
       type: "INFERENTIAL",
       reason: "The model proposed an explicit negation, but neither statement is negated or absolute. Downgraded to inferential.",
