@@ -80,6 +80,28 @@ describe("classify", () => {
     expect(classify("imprecision_or_compatible", "time", far).type).toBe("INFERENTIAL");
   });
 
+  it("returns DIRECT for an out-of-tolerance time conflict stated as an explicit denial", () => {
+    const s = baseSignals({
+      polarityFlip: true,
+      absolutesA: ["never"],
+      time: { minutesA: [1440, 1440], minutesB: [1320, 1320], gapMinutes: 120, toleranceMinutes: 30, withinTolerance: false },
+    });
+    const c = classify("explicit_negation", "time", s);
+    expect(c.type).toBe("DIRECT");
+    expect(c.reason).toMatch(/120-minute gap against a 30-minute tolerance/);
+    expect(c.reason).toMatch(/one statement is negated/);
+    expect(c.reason).toMatch(/"never"/);
+  });
+
+  it("keeps the same time signals INFERENTIAL when the model did not propose explicit_negation", () => {
+    const s = baseSignals({
+      polarityFlip: true,
+      absolutesA: ["never"],
+      time: { minutesA: [1440, 1440], minutesB: [1320, 1320], gapMinutes: 120, toleranceMinutes: 30, withinTolerance: false },
+    });
+    expect(classify("incompatible_by_inference", "time", s).type).toBe("INFERENTIAL");
+  });
+
   it("only applies time rules to time claims", () => {
     const within = baseSignals({ polarityFlip: true, time: { minutesA: [480, 480], minutesB: [485, 485], gapMinutes: 5, toleranceMinutes: 30, withinTolerance: true } });
     expect(classify("explicit_negation", "presence", within).type).toBe("DIRECT");
